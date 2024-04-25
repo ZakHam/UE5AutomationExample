@@ -21,10 +21,14 @@
 		<Node Name="Compile UnrealEditor Win64" Produces="#EditorBinaries">
 			<Compile Target="$(TargetProject)Editor" Platform="Win64" Configuration="$(BuildType)" Project="$(TargetProject)" Tag="#EditorBinaries"/>
 		</Node>
+		
+		<Node Name="Run Custom Task">
+			<CustomTask Target="$(TargetProject)" Arguments="Arg1;Arg2" />
+		</Node>
 
 		<!-- This node runs the specified tests against the built editor, it therefore depends on the product of the
 		     previous compile editor node. -->
-		<Node Name="Run Editor Tests" Requires="#EditorBinaries">
+		<Node Name="Run Editor Tests" Requires="#EditorBinaries;Run Custom Task">
 			<Command Name="RunUnreal" Arguments="-Test=UE.EditorAutomation -Build=Editor -Project=$(TargetProject) -RunTest=$(TestName) -NullRHI" />
 		</Node>
 	</Agent>
