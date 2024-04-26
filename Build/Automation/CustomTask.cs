@@ -1,6 +1,8 @@
-﻿using EpicGames.BuildGraph;
+﻿using AutomationTool;
 using EpicGames.Core;
+using Microsoft.Extensions.Logging;
 using System.Collections.Generic;
+using System.Threading.Tasks;
 using System.Xml;
 
 namespace AutomationExample.Automation;
@@ -39,7 +41,7 @@ public class CustomTask : BgTaskImpl
 	/// <param name="TagNameToFileSet">Mapping from tag names to the set of files they include</param>
 	public override Task ExecuteAsync(JobContext Job, HashSet<FileReference> BuildProducts, Dictionary<string, HashSet<FileReference>> TagNameToFileSet)
 	{
-		Log.Logger.LogInfo("Running custom task with input: {Parameters}", Parameters);
+		Log.Logger.LogInformation("Running custom task with optional args: '{Arguments}'", Parameters.Arguments);
 		return Task.CompletedTask;
 	}
 
@@ -66,6 +68,6 @@ public class CustomTask : BgTaskImpl
 	/// <returns>The tag names which are modified by this task</returns>
 	public override IEnumerable<string> FindProducedTagNames()
 	{
-		return FindTagNamesFromList(Parameters.Tag);
+		yield break;
 	}
 }
