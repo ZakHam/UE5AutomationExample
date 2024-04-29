@@ -3,11 +3,15 @@
 			xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
 			xsi:schemaLocation="http://www.epicgames.com/BuildGraph ../../../Engine/Build/Graph/Schema.xsd" >
 
+	<!-- This defines an option which can be passed to the build graph using -set:{optionName}={optionValue} -->
+	<Option Name="WithSecondWait" DefaultValue="false" Restrict="true|false" Description="Should the second wait be performed" />
+
 	<!-- The agent tag is detected by Horde when that is your CI system, and each node will run on the specified agent
 	     pool. In this case "Win64", this is useful if you have some nodes that need different environments, e.g. a
-	     different VS version, a docker daemon etc. -->
+	     different MSVC version, a docker daemon etc. -->
 	<Agent Name="Default Agent" Type="Win64">
-		
+
+		<!-- A node defines one or more actions to perform, e.g. wait for 1 second -->
 		<Node Name="First Wait">
 			<Wait Seconds="1"/>
 		</Node>
@@ -16,14 +20,23 @@
 			<Wait Seconds="1"/>
 		</Node>
 
+		<!-- Nodes can depend on other nodes, or the output of other nodes -->
 		<Node Name="Third Wait" Requires="First Wait">
 			<Wait Seconds="1"/>
 		</Node>
 
-		<Node Name="Final Wait" Requires="Second Wait; Third Wait">
+		<!-- Properties can be used like variables to perform conditional logic -->
+		<Property Name="FinalWaitDependencies" Value="Third Wait" />
+
+		<!-- Properties / Nodes / etc. can be conditionally defined based on options / other properties -->
+		<Property Name="FinalWaitDependencies" Value="Second Wait; Third Wait" If="$(WithSecondWait)" />
+
+		<!-- Properties can also be used within requirements etc. -->
+		<Node Name="Final Wait" Requires="$(FinalWaitDependencies)">
 			<Wait Seconds="1"/>
 		</Node>
 	</Agent>
-	
+
+	<!-- An aggregate is a way to combine multiple nodes into a single target -->
 	<Aggregate Name="First Two Waits" Requires="First Wait; Second Wait" />
 </BuildGraph>
