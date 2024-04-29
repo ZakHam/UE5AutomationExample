@@ -3,10 +3,11 @@
 			xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
 			xsi:schemaLocation="http://www.epicgames.com/BuildGraph ../../../Engine/Build/Graph/Schema.xsd" >
 
-	<!-- Specify an input option for the graph. These are set in the command line via "-set:{OptionName}={OptionValue}
+	<!-- Specify input options for the graph. These are set in the command line via "-set:{OptionName}={OptionValue}
 	     Restrict can be a regular expression, or a set of values: "^[^ ]+Project" or "Enable|Disable|Skip" -->
 	<Option Name="TargetProject" Restrict="[^ ]*" DefaultValue="AutomationExample" Description="The target project."/>
 	<Option Name="BuildType" Restrict="Development|Debug" DefaultValue="Development" Description="The type of editor to compile" />
+	<Option Name="UsedCookedClient" Restrict="true|false" DefaultValue="false" Description="Should tests run against a cooked client" />
 	<Option Name="TestName" DefaultValue="AutomationExample.Tests." Description="The tests to run" />
 
 	<!-- The agent tag is detected by Horde when that is your CI system, and each node will run on the specified agent
@@ -14,22 +15,23 @@
 	     different VS version, a docker daemon etc. -->
 	<Agent Name="Default Agent" Type="Win64">
 
-		<!-- Each node in a build graph should specify a block of work, for example the following node compiles the
+		<!-- A node defines one or more actions to perform, for example the following node compiles the
 		     editor based on the input options. The compile action will tag each output file with #EditorBinaries,
 		     and this is specified as the output of the node. Subsequent nodes can depend on these files, or use them
 		     as input to actions. -->
 		<Node Name="Compile UnrealEditor Win64" Produces="#EditorBinaries">
 			<Compile Target="$(TargetProject)Editor" Platform="Win64" Configuration="$(BuildType)" Project="$(TargetProject)" Tag="#EditorBinaries"/>
 		</Node>
-		
+
+		<!-- Here we run the custom task we've defined in AutomationExample/Build/Automation/CustomTask.cs -->
 		<Node Name="Run Custom Task">
 			<CustomTask Target="$(TargetProject)" Arguments="Arg1;Arg2" />
 		</Node>
 
 		<!-- This node runs the specified tests against the built editor, it therefore depends on the product of the
 		     previous compile editor node. -->
-		<Node Name="Run Editor Tests" Requires="#EditorBinaries;Run Custom Task">
-			<Command Name="RunUnreal" Arguments="-Test=UE.EditorAutomation -Build=Editor -Project=$(TargetProject) -RunTest=$(TestName) -NullRHI" />
+		<Node Name="Run Client Tests" Requires="#EditorBinaries;Run Custom Task">
+			<Command Name="RunUnreal" Arguments="-Test=UE.TargetAutomation -Build=Editor -Project=$(TargetProject) -RunTest=$(TestName) -Log" />
 		</Node>
 	</Agent>
 </BuildGraph>
